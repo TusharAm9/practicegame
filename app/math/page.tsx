@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
+import { logMistake } from "@/utils/supabase/queries";
 
 
 type GameMode = "squares" | "cubes" | "tables" | "division" | null;
@@ -168,6 +169,16 @@ export default function MathPage() {
     setFeedback(isCorrect ? "correct" : "incorrect");
 
     setTimeout(async () => {
+      // Log mistake if incorrect
+      if (!isCorrect && user) {
+        logMistake(user.id, {
+          subject: 'math',
+          mode: mode || 'unknown',
+          question: currentQ.text,
+          answer: currentQ.answer.toString()
+        });
+      }
+
       if (currentQuestionIndex < QUESTIONS_PER_SESSION - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
         setUserInput("");

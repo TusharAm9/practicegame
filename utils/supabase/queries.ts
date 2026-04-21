@@ -71,3 +71,56 @@ export async function updateGameStats(userId: string, gameResult: { score: numbe
         console.error('Error updating game metadata:', error);
     }
 }
+
+export async function logMistake(userId: string, data: { 
+    subject: string, 
+    mode: string, 
+    question: string, 
+    answer: string 
+}) {
+    const supabase = createClient();
+    
+    try {
+        const { error } = await supabase.from('user_mistakes').insert({
+            user_id: userId,
+            subject: data.subject,
+            mode: data.mode,
+            question_data: data.question,
+            correct_answer: data.answer,
+            last_missed_at: new Date().toISOString()
+        });
+
+        if (error) {
+            console.warn('Mistakes table not found or error inserting. Skipping individual logging.', error);
+        }
+    } catch (err) {
+        console.warn('Failed to log mistake:', err);
+    }
+}
+
+export async function getUserWeaknesses(userId: string) {
+    const supabase = createClient();
+    
+    const { data: results } = await supabase
+        .from('test_results')
+        .select('subject, mode, accuracy, score, total_questions')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+    if (!results || results.length === 0) return null;
+
+    const mastery: Record<string, { total: number, correct: number, accuracy: number }> = {};
+
+    results.forEach((run: { subject: string; mode: string; total_questions: number; score: number }) => {
+        const key = `${run.subject}:${run.mode}`;
+        if (!mastery[key]) {
+            mastery[key] = { total: 0, correct: 0, accuracy: 0 };
+        }
+        mastery[key].total += run.total_questions;
+        mastery[key].correct += run.score;
+        mastery[key].accuracy = Math.round((mastery[key].correct / (mastery[key].total || 1)) * 100);
+    });
+
+    return mastery;
+}

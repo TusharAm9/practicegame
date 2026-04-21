@@ -10,15 +10,20 @@ import {
   Sun,
   CloudSun,
   Moon,
-  Trophy
+  Trophy,
+  Target
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { getUserWeaknesses } from "@/utils/supabase/queries";
+import { MasteryTracker } from "@/components/MasteryTracker";
 
 export default function Home() {
   const [greeting, setGreeting] = useState("Hello");
   const [userName, setUserName] = useState("Partner");
   const [icon, setIcon] = useState(<Sun className="w-8 h-8 text-yellow-500" />);
+  const [weaknesses, setWeaknesses] = useState<any>(null);
+  const [loadingWeaknesses, setLoadingWeaknesses] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
@@ -38,7 +43,12 @@ export default function Home() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUserName(session.user.user_metadata?.full_name?.split(' ')[0] || "Tushar");
+        
+        // Fetch weaknesses for adaptive insights
+        const mastery = await getUserWeaknesses(session.user.id);
+        setWeaknesses(mastery);
       }
+      setLoadingWeaknesses(false);
     };
     fetchUser();
   }, [supabase]);
@@ -64,6 +74,33 @@ export default function Home() {
             Ready to master your exams? Choose a subject or warm up with a drill.
           </p>
         </header>
+
+        {/* Performance Insights Section */}
+        {!loadingWeaknesses && weaknesses && (
+          <div className="mb-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+             <div className="lg:col-span-2 glass p-8 rounded-[3rem] border border-white/5 relative overflow-hidden">
+                <MasteryTracker data={weaknesses} />
+             </div>
+             <div className="glass p-8 rounded-[3rem] border border-blue-500/20 bg-blue-500/5 relative overflow-hidden h-full flex flex-col justify-center">
+                <div className="relative z-10 space-y-4">
+                   <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                      <Target className="w-6 h-6" />
+                   </div>
+                   <h3 className="text-xl font-black text-foreground">Recommended Focus</h3>
+                   <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                      Based on your recent sessions, we suggest prioritizing 
+                      <span className="text-blue-500 font-bold ml-1 uppercase">
+                        {Object.entries(weaknesses).sort((a: any, b: any) => a[1].accuracy - b[1].accuracy)[0][0].split(':')[1]}
+                      </span> to boost your overall accuracy.
+                   </p>
+                   <Link href={`/${Object.entries(weaknesses).sort((a: any, b: any) => a[1].accuracy - b[1].accuracy)[0][0].split(':')[0]}`} className="inline-flex items-center gap-2 mt-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase tracking-widest transition-all">
+                      Start Targeting <ChevronRight className="w-4 h-4" />
+                   </Link>
+                </div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full" />
+             </div>
+          </div>
+        )}
 
         {/* Daily Drills Section */}
         <div className="mb-12">

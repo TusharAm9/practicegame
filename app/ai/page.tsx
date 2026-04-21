@@ -3,6 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import AIDashboard from "@/components/AIDashboard";
 import { redirect } from "next/navigation";
+import { getUserWeaknesses } from "@/utils/supabase/queries";
 import fs from "fs";
 import path from "path";
 
@@ -15,6 +16,9 @@ export default async function AIPage() {
   if (!user) {
     redirect("/login");
   }
+
+  // Fetch performance data for AI study plan
+  const weaknesses = await getUserWeaknesses(user.id);
 
   // Fetch local library files
   const localPdfDir = path.join(process.cwd(), "public", "pdfs");
@@ -47,6 +51,7 @@ export default async function AIPage() {
         initialPdfs={pdfs || []} 
         initialTests={tests || []} 
         localFiles={localFiles}
+        weaknesses={weaknesses}
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, UserCircle, LogIn, Sparkles } from "lucide-react";
+import { Home, UserCircle, LogIn, Sparkles, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
@@ -69,6 +69,12 @@ export const Navbar = () => {
                 href="/profile" 
                 icon={<UserCircle className="w-4 h-4" />} 
                 active={pathname === "/profile"} 
+              />
+              <div className="w-px h-4 bg-white/10 mx-1" />
+              <NavLink 
+                href="/mistakes" 
+                icon={<AlertCircle className="w-4 h-4" />} 
+                active={pathname === "/mistakes"} 
               />
             </>
           ) : (

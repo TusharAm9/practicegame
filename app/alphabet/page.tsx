@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
+import { logMistake } from "@/utils/supabase/queries";
 
 type AlphabetMode = "positions" | "letters" | "opposites" | "mixed" | null;
 
@@ -165,6 +166,16 @@ export default function AlphabetPage() {
     setFeedback(isCorrect ? "correct" : "incorrect");
 
     setTimeout(async () => {
+      // Log mistake if incorrect
+      if (!isCorrect && user) {
+        logMistake(user.id, {
+          subject: 'alphabet',
+          mode: mode || 'unknown',
+          question: currentQ.text,
+          answer: currentQ.answer.toString()
+        });
+      }
+
       if (currentQuestionIndex < QUESTIONS_PER_SESSION - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
         setUserInput("");

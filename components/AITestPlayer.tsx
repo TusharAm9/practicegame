@@ -20,6 +20,7 @@ import {
   Flag
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { logMistake } from "@/utils/supabase/queries";
 import Link from "next/link";
 
 interface Question {
@@ -109,6 +110,18 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
         isCorrect: userSelections[idx] === q.answer
       }));
 
+      // Log individual mistakes
+      results.forEach(r => {
+        if (!r.isCorrect) {
+          logMistake(user.id, { 
+            subject: 'ai_test', 
+            mode: test.title, 
+            question: r.question, 
+            answer: r.correctAnswer 
+          });
+        }
+      });
+
       const score = results.filter(r => r.isCorrect).length;
       await supabase.from('test_results').insert({
         user_id: user.id,
@@ -161,6 +174,12 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
                   <div key={i} className={`p-6 rounded-2xl border ${r.isCorrect ? 'bg-status-answered/5 border-status-answered/20' : 'bg-status-unanswered/5 border-status-unanswered/20'}`}>
                     <p className="text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Question {i+1}</p>
                     <p className="text-foreground font-bold text-lg mb-4">{r.question}</p>
+                    {!r.isCorrect && user && (
+                      <button 
+                        onClick={() => logMistake(user.id, { subject: 'ai_test', mode: test.title, question: r.question, answer: r.correctAnswer })}
+                        className="hidden" // Internal trigger or manual log if needed, currently AI tests log summary
+                      />
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
                       <div className="p-3 bg-white/5 rounded-xl border border-white/5">
                         <p className="text-[10px] text-slate-500 uppercase font-black mb-1">Your Answer</p>

@@ -20,15 +20,17 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import AITestPlayer from "./AITestPlayer";
+import StudyPlan from "./StudyPlan";
 
 interface AIDashboardProps {
   user: any;
   initialPdfs: any[];
   initialTests: any[];
   localFiles: string[];
+  weaknesses?: any;
 }
 
-export default function AIDashboard({ user, initialPdfs, initialTests, localFiles }: AIDashboardProps) {
+export default function AIDashboard({ user, initialPdfs, initialTests, localFiles, weaknesses }: AIDashboardProps) {
   const searchParams = useSearchParams();
   const requestedSubject = searchParams.get("subject");
 
@@ -293,6 +295,8 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
             </div>
           </div>
         </div>
+        
+        <StudyPlan weaknesses={weaknesses} />
       </div>
 
       {/* Immersive AI Progress Overlay */}
