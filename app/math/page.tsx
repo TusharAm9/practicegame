@@ -29,6 +29,8 @@ interface Question {
   text: string;
   answer: number;
   mode: GameMode;
+  type?: "calculate" | "identify";
+  displayValue?: string;
 }
 
 interface Attempt {
@@ -56,8 +58,8 @@ export default function MathPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
     };
     fetchUser();
   }, []);
@@ -89,24 +91,34 @@ export default function MathPage() {
     };
 
     const newQuestions: Question[] = [];
-    const pool: {q: string, a: number}[] = [];
+    const pool: {q: string, a: number, type: string, val: string}[] = [];
 
     if (selectedMode === "squares") {
       const max = difficulty === "standard" ? 30 : 60;
       for (let n = 1; n <= max; n++) {
-        pool.push({ q: `${n}²`, a: n * n });
+        // Standard question: what is n squared?
+        pool.push({ q: `${n}² =`, a: n * n, type: "calculate", val: `${n}²` });
+        // Identify question: which number squared is n*n?
+        if (n > 1) {
+          pool.push({ q: `?² =`, a: n, type: "identify", val: (n * n).toString() });
+        }
       }
     } else if (selectedMode === "cubes") {
       const max = difficulty === "standard" ? 20 : 40;
       for (let n = 1; n <= max; n++) {
-        pool.push({ q: `${n}³`, a: n * n * n });
+        // Standard question: what is n cubed?
+        pool.push({ q: `${n}³ =`, a: n * n * n, type: "calculate", val: `${n}³` });
+        // Identify question: which number cubed is n*n*n?
+        if (n > 1) {
+          pool.push({ q: `?³ =`, a: n, type: "identify", val: (n * n * n).toString() });
+        }
       }
     } else if (selectedMode === "tables") {
       const maxN1 = difficulty === "standard" ? 30 : 50;
       const maxN2 = difficulty === "standard" ? 10 : 20;
       for (let n1 = 2; n1 <= maxN1; n1++) {
         for (let n2 = 1; n2 <= maxN2; n2++) {
-          pool.push({ q: `${n1} × ${n2}`, a: n1 * n2 });
+          pool.push({ q: `${n1} × ${n2}`, a: n1 * n2, type: "calculate", val: `${n1} × ${n2}` });
         }
       }
     }
@@ -117,7 +129,9 @@ export default function MathPage() {
     return selectedPool.map(item => ({
       text: item.q,
       answer: item.a,
-      mode: selectedMode
+      mode: selectedMode,
+      type: item.type as "calculate" | "identify",
+      displayValue: item.val
     }));
   };
 
@@ -324,17 +338,68 @@ export default function MathPage() {
                 <div className="w-8" />
               </div>
 
-              {/* Smaller Question Box */}
-              <motion.div 
-                animate={feedback === "incorrect" ? { x: [-5, 5, -5, 5, 0] } : {}}
-                className={`glass p-8 md:p-12 rounded-[2.5rem] border-2 transition-all flex flex-col items-center justify-center max-w-xl mx-auto ${
-                  feedback === "correct" ? "border-status-answered/40 bg-status-answered/20 dark:bg-status-answered/5" : 
-                  feedback === "incorrect" ? "border-status-unanswered/40 bg-status-unanswered/20 dark:bg-status-unanswered/5" : "border-slate-200 dark:border-white/5"
-                }`}
-              >
-                <div className="text-6xl md:text-8xl font-black text-foreground mb-8 tracking-tighter tabular-nums">
-                  {questions[currentQuestionIndex]?.text}
-                </div>
+              {/* Question Display Area */}
+              <div className="flex flex-col items-center justify-center min-h-[300px] gap-8">
+                <motion.div 
+                  key={currentQuestionIndex}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center"
+                >
+                  <motion.span 
+                    layout
+                    className={`${questions[currentQuestionIndex]?.type === "identify" ? "text-blue-500 text-2xl" : "text-slate-500 text-sm"} font-black uppercase tracking-[0.3em] mb-4 block transition-all duration-500`}
+                  >
+                    {questions[currentQuestionIndex]?.text}
+                  </motion.span>
+                  
+                  {questions[currentQuestionIndex]?.type === "identify" ? (
+                    <div className="relative flex items-center justify-center py-12">
+                      {questions[currentQuestionIndex]?.mode === "squares" ? (
+                        <motion.div 
+                          initial={{ scale: 0.8 }}
+                          animate={{ scale: 1 }}
+                          className="w-48 h-48 bg-blue-600/10 border-4 border-blue-500 rounded-3xl flex items-center justify-center shadow-[0_0_50px_-12px_rgba(59,130,246,0.5)] relative overflow-hidden group"
+                        >
+                          <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 to-transparent" />
+                          <div className="text-5xl md:text-6xl font-black text-foreground z-10 tabular-nums">
+                            {questions[currentQuestionIndex]?.displayValue}
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <div className="perspective-1000 py-8">
+                          <motion.div 
+                            animate={{ rotateY: [0, 360] }}
+                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            className="w-32 h-32 relative preserve-3d"
+                          >
+                            {/* Cube Sides */}
+                            {[
+                              "rotateY(0deg) translateZ(64px)",
+                              "rotateY(90deg) translateZ(64px)",
+                              "rotateY(180deg) translateZ(64px)",
+                              "rotateY(270deg) translateZ(64px)",
+                              "rotateX(90deg) translateZ(64px)",
+                              "rotateX(-90deg) translateZ(64px)"
+                            ].map((transform, i) => (
+                              <div 
+                                key={i}
+                                className="absolute inset-0 bg-purple-600/20 border-2 border-purple-500/50 flex items-center justify-center text-2xl font-black text-foreground shadow-inner backdrop-blur-sm"
+                                style={{ transform }}
+                              >
+                                {questions[currentQuestionIndex]?.displayValue}
+                              </div>
+                            ))}
+                          </motion.div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-7xl md:text-9xl font-black text-foreground tracking-tighter tabular-nums py-8">
+                      {questions[currentQuestionIndex]?.displayValue}
+                    </div>
+                  )}
+                </motion.div>
 
                 <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-4">
                   <input
@@ -350,13 +415,16 @@ export default function MathPage() {
                       }
                     }}
                     placeholder="Type answer..."
-                    className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-4 text-3xl font-black text-center text-foreground focus:outline-none focus:border-blue-500 transition-all"
+                    className={`w-full bg-white/5 border-2 rounded-2xl px-6 py-4 text-3xl font-black text-center text-foreground focus:outline-none transition-all ${
+                      feedback === "correct" ? "border-status-answered" : 
+                      feedback === "incorrect" ? "border-status-unanswered" : "border-white/10 focus:border-blue-500"
+                    }`}
                   />
                   <button type="submit" className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
                     Submit
                   </button>
                 </form>
-              </motion.div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -366,9 +434,17 @@ export default function MathPage() {
 }
 
 function OptionCard({ title, desc, icon, color, onClick, disabled }: { title: string; desc: string; icon: React.ReactNode; color: string; onClick?: () => void; disabled?: boolean; }) {
+  const colorMap: Record<string, string> = {
+    'status-answered': 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5',
+    'status-marked': 'text-purple-500 border-purple-500/20 bg-purple-500/5',
+    'status-unanswered': 'text-rose-500 border-rose-500/20 bg-rose-500/5',
+  };
+
+  const colorClasses = colorMap[color] || 'text-blue-500 border-blue-500/20 bg-blue-500/5';
+
   return (
     <motion.div whileHover={!disabled ? { y: -5, scale: 1.02 } : {}} whileTap={!disabled ? { scale: 0.98 } : {}} onClick={onClick} className={`p-8 rounded-4xl border relative overflow-hidden cursor-pointer transition-all ${disabled ? "bg-slate-900/40 border-white/5 grayscale" : "glass border-white/10 hover:border-white/20 group"}`}>
-      <div className={`p-4 rounded-xl mb-4 w-fit bg-white/5 text-blue-500 border border-white/10 group-hover:scale-110 transition-transform`}>{icon}</div>
+      <div className={`p-4 rounded-xl mb-4 w-fit border transition-all duration-500 group-hover:scale-110 ${colorClasses}`}>{icon}</div>
       <h3 className="text-2xl font-black text-foreground">{title}</h3>
       <p className="text-slate-500 font-bold text-sm tracking-tight">{desc}</p>
     </motion.div>

@@ -27,7 +27,7 @@ export default function SubjectTestList({ tests: initialTests, user }: SubjectTe
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <AnimatePresence>
         {initialTests.length === 0 ? (
-          <div className="col-span-full text-center py-20 glass rounded-[2rem] border-2 border-dashed border-white/5 space-y-4">
+          <div className="col-span-full text-center py-20 glass rounded-4xl border-2 border-dashed border-white/5 space-y-4">
             <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center mx-auto text-slate-700">
               <Library className="w-8 h-8" />
             </div>
@@ -42,7 +42,7 @@ export default function SubjectTestList({ tests: initialTests, user }: SubjectTe
               key={test.id}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass p-6 rounded-[2rem] border border-white/10 hover:border-blue-500/30 transition-all group relative overflow-hidden"
+              className="glass p-6 rounded-4xl border border-white/10 hover:border-blue-500/30 transition-all group relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 blur-2xl rounded-full" />
               

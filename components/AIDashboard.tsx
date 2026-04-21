@@ -262,7 +262,7 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
                     <motion.div 
                       key={idx} 
                       whileHover={{ x: 5 }}
-                      className="p-5 rounded-[2rem] bg-white/5 border border-white/5 flex flex-col gap-4 border-l-4 border-l-transparent hover:border-l-blue-500 transition-all"
+                      className="p-5 rounded-4xl bg-white/5 border border-white/5 flex flex-col gap-4 border-l-4 border-l-transparent hover:border-l-blue-500 transition-all"
                     >
                       <div className="flex items-start gap-4">
                         <div className="p-3 rounded-2xl bg-blue-500/10">
@@ -302,7 +302,7 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[150] flex items-center justify-center p-6 bg-background/80 backdrop-blur-xl"
+            className="fixed inset-0 z-150 flex items-center justify-center p-6 bg-background/80 backdrop-blur-xl"
           >
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
@@ -357,7 +357,7 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-background/60 backdrop-blur-md"
+            className="fixed inset-0 z-200 flex items-center justify-center p-6 bg-background/60 backdrop-blur-md"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}

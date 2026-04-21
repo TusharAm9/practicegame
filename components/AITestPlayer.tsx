@@ -142,7 +142,7 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
     const correctCount = results.filter(r => r.isCorrect).length;
 
     return (
-      <main className="fixed inset-0 z-[999] p-6 md:p-12 overflow-y-auto bg-background font-sans">
+      <main className="fixed inset-0 z-999 p-6 md:p-12 overflow-y-auto bg-background font-sans">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full" />
         <div className="max-w-6xl mx-auto relative z-10 w-full">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
@@ -208,7 +208,7 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
   const currentQ = test.questions[currentIndex];
 
   return (
-    <main className="fixed inset-0 z-[999] p-4 md:p-8 overflow-y-auto bg-background font-sans">
+    <main className="fixed inset-0 z-999 p-4 md:p-8 overflow-y-auto bg-background font-sans">
       <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row gap-8 relative z-10">
         
         {/* Left: Question Content (70%) */}
@@ -392,7 +392,7 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
 
               <button 
                 onClick={finishTest}
-                className="w-full py-5 rounded-[2rem] bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-xs transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2"
+                className="w-full py-5 rounded-4xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest text-xs transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2"
               >
                 <Send className="w-4 h-4" /> Submit Test
               </button>

@@ -35,9 +35,9 @@ export default function Home() {
     }
 
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserName(user.user_metadata?.full_name?.split(' ')[0] || "Tushar");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserName(session.user.user_metadata?.full_name?.split(' ')[0] || "Tushar");
       }
     };
     fetchUser();
@@ -65,27 +65,42 @@ export default function Home() {
           </p>
         </header>
 
-        {/* Daily Drills Section slice */}
-        <div className="mb-8">
+        {/* Daily Drills Section */}
+        <div className="mb-12">
           <div className="flex items-center gap-2 text-slate-500 font-black uppercase tracking-widest text-[10px] mb-4 px-1">
-            <Trophy className="w-4 h-4" /> Recommended Warm-up
+            <Trophy className="w-4 h-4 text-yellow-500" /> Recommended Warm-ups
           </div>
-          <Link href="/math">
-            <div className="glass p-8 rounded-[3rem] border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-all flex flex-col md:flex-row items-center justify-between gap-6 group">
-              <div className="flex items-center gap-6">
-                <div className="p-5 rounded-3xl bg-blue-500/20 text-blue-500 group-hover:scale-110 transition-transform">
-                  <Calculator className="w-10 h-10" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Link href="/math">
+              <div className="glass p-8 rounded-[3rem] border border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-all flex items-center justify-between gap-6 group h-full">
+                <div className="flex items-center gap-6">
+                  <div className="p-5 rounded-3xl bg-blue-500/20 text-blue-500 group-hover:scale-110 transition-transform">
+                    <Calculator className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-foreground">Speed Math</h2>
+                    <p className="text-slate-400 text-sm font-medium">Squares, cubes, and tables.</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-3xl font-black text-foreground">Speed Math Challenge</h2>
-                  <p className="text-slate-400 font-medium">Drill squares, cubes, and tables to boost your calculation speed.</p>
+                <ChevronRight className="w-6 h-6 text-blue-500 group-hover:translate-x-2 transition-transform" />
+              </div>
+            </Link>
+
+            <Link href="/alphabet">
+              <div className="glass p-8 rounded-[3rem] border border-pink-500/20 bg-pink-500/5 hover:bg-pink-500/10 transition-all flex items-center justify-between gap-6 group h-full">
+                <div className="flex items-center gap-6">
+                  <div className="p-5 rounded-3xl bg-pink-500/20 text-pink-500 group-hover:scale-110 transition-transform">
+                    <Languages className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black text-foreground">Alphabet Drill</h2>
+                    <p className="text-slate-400 text-sm font-medium">A-Z positions and opposites.</p>
+                  </div>
                 </div>
+                <ChevronRight className="w-6 h-6 text-pink-500 group-hover:translate-x-2 transition-transform" />
               </div>
-              <div className="px-8 py-4 rounded-2xl bg-blue-600 text-white font-black uppercase tracking-widest text-xs group-hover:px-10 transition-all">
-                Play Now
-              </div>
-            </div>
-          </Link>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -139,7 +154,7 @@ function SubjectCard({
   disabled?: boolean;
 }) {
   const CardContent = (
-    <div className={`p-6 rounded-[2rem] border relative overflow-hidden h-full transition-all duration-300 ${
+    <div className={`p-6 rounded-4xl border relative overflow-hidden h-full transition-all duration-300 ${
       disabled 
         ? "bg-slate-200/50 dark:bg-slate-900/40 border-slate-200 dark:border-white/5 cursor-not-allowed grayscale" 
         : "glass border-white/10 hover:border-white/20 hover:-translate-y-2 hover:shadow-2xl group"

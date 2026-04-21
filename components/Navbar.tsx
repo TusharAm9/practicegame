@@ -16,16 +16,16 @@ export const Navbar = () => {
   const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        updateDailyStreak(user.id);
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        updateDailyStreak(session.user.id);
       }
     };
-    getUser();
+    checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         updateDailyStreak(session.user.id);
