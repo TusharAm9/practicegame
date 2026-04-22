@@ -155,7 +155,7 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
     const correctCount = results.filter(r => r.isCorrect).length;
 
     return (
-      <main className="fixed inset-0 z-999 p-6 md:p-12 overflow-y-auto bg-background font-sans">
+      <main className="fixed inset-0 z-999 p-2 md:p-12 overflow-y-auto bg-background font-sans">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full" />
         <div className="max-w-6xl mx-auto relative z-10 w-full">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
@@ -169,9 +169,9 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 glass p-8 rounded-3xl border border-white/10 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+              <div className="lg:col-span-2 glass p-4 md:p-8 rounded-3xl border border-white/10 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
                 {results.map((r, i) => (
-                  <div key={i} className={`p-6 rounded-2xl border ${r.isCorrect ? 'bg-status-answered/5 border-status-answered/20' : 'bg-status-unanswered/5 border-status-unanswered/20'}`}>
+                  <div key={i} className={`p-4 md:p-6 rounded-2xl border ${r.isCorrect ? 'bg-status-answered/5 border-status-answered/20' : 'bg-status-unanswered/5 border-status-unanswered/20'}`}>
                     <p className="text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Question {i+1}</p>
                     <p className="text-foreground font-bold text-lg mb-4">{r.question}</p>
                     {!r.isCorrect && user && (
@@ -227,7 +227,7 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
   const currentQ = test.questions[currentIndex];
 
   return (
-    <main className="fixed inset-0 z-999 p-4 md:p-8 overflow-y-auto bg-background font-sans">
+    <main className="fixed inset-0 z-999 p-2 md:p-8 overflow-y-auto bg-background font-sans">
       <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row gap-8 relative z-10">
         
         {/* Left: Question Content (70%) */}
@@ -245,7 +245,7 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
           </div>
 
           {/* Question Box */}
-          <div className="flex-1 glass p-8 md:p-12 rounded-[2.5rem] border border-white/10 flex flex-col relative overflow-hidden shadow-2xl">
+          <div className="flex-1 glass p-4 md:p-12 rounded-[2.5rem] border border-white/10 flex flex-col relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl rounded-full" />
             
             <div className="relative z-10 flex-1 flex flex-col overflow-y-auto pr-4 custom-scrollbar min-h-0">

@@ -228,11 +228,11 @@ export default function MathPage() {
   }, [mode, currentQuestionIndex, isGameOver]);
 
   return (
-    <main className="min-h-screen p-4 md:p-8 lg:p-12 relative overflow-hidden bg-background font-sans">
+    <main className={`min-h-screen ${mode && !isGameOver ? 'h-screen' : ''} p-4 md:p-8 relative overflow-hidden bg-background font-sans flex flex-col`}>
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto relative z-10 w-full">
+      <div className={`max-w-4xl mx-auto relative z-10 w-full ${mode && !isGameOver ? 'flex-1 flex flex-col h-full overflow-hidden' : ''}`}>
         <AnimatePresence mode="wait">
           {!mode ? (
             <motion.div key="menu" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-12">
@@ -317,15 +317,15 @@ export default function MathPage() {
                     </h3>
                     <div className="space-y-4">
                        <ResourceItem title={`${mode?.charAt(0).toUpperCase()}${mode?.slice(1)} Reference`} link={`https://www.google.com/search?q=${mode}+table+1+to+30`} />
-                       <div className="p-4 bg-white/5 rounded-2xl text-sm text-slate-400 leading-relaxed">
-                          💡 <span className="font-bold text-foreground">Pro Tip:</span> Constant repetition is key to mental math. Try focusing on the ones you missed in this session.
-                       </div>
+                        <div className="p-4 bg-white/10 dark:bg-white/5 rounded-2xl text-sm text-slate-600 dark:text-slate-400 leading-relaxed border border-white/10">
+                           💡 <span className="font-bold text-slate-900 dark:text-white">Pro Tip:</span> Constant repetition is key to mental math. Try focusing on the ones you missed in this session.
+                        </div>
                     </div>
                     <div className="flex gap-4">
-                      <button onClick={() => setMode(null)} className="flex-1 py-4 rounded-2xl bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-foreground dark:text-white font-black uppercase tracking-widest transition-all">
+                      <button onClick={() => setMode(null)} className="flex-1 py-4 rounded-2xl bg-white dark:bg-white/5 border-2 border-blue-500/20 hover:border-blue-500 text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest transition-all shadow-sm">
                         Play Again
                       </button>
-                      <Link href="/" className="flex-1 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                      <Link href="/" className="flex-1 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
                         <HomeIcon className="w-4 h-4" /> Home
                       </Link>
                     </div>
@@ -333,7 +333,7 @@ export default function MathPage() {
                </div>
             </motion.div>
           ) : (
-            <motion.div key="game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <motion.div key="game" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col h-full space-y-6">
               {/* Top Timer & Progress */}
               <div className="flex justify-between items-center mb-4">
                 <button onClick={() => setMode(null)} className="text-slate-500 hover:text-white transition-colors"><ArrowLeft /></button>
@@ -350,66 +350,23 @@ export default function MathPage() {
               </div>
 
               {/* Question Display Area */}
-              <div className="flex flex-col items-center justify-center min-h-[300px] gap-8">
+              <div className="flex flex-col items-center justify-center flex-1 gap-8 py-4">
                 <motion.div 
                   key={currentQuestionIndex}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-center"
                 >
                   <motion.span 
                     layout
-                    className={`${questions[currentQuestionIndex]?.type === "identify" ? "text-blue-500 text-2xl" : "text-slate-500 text-sm"} font-black uppercase tracking-[0.3em] mb-4 block transition-all duration-500`}
+                    className={`${questions[currentQuestionIndex]?.type === "identify" ? "text-blue-500 text-xl" : "text-slate-500 text-sm"} font-black uppercase tracking-[0.3em] mb-2 block`}
                   >
                     {questions[currentQuestionIndex]?.text}
                   </motion.span>
                   
-                  {questions[currentQuestionIndex]?.type === "identify" ? (
-                    <div className="relative flex items-center justify-center py-12">
-                      {questions[currentQuestionIndex]?.mode === "squares" ? (
-                        <motion.div 
-                          initial={{ scale: 0.8 }}
-                          animate={{ scale: 1 }}
-                          className="w-48 h-48 bg-blue-600/10 border-4 border-blue-500 rounded-3xl flex items-center justify-center shadow-[0_0_50px_-12px_rgba(59,130,246,0.5)] relative overflow-hidden group"
-                        >
-                          <div className="absolute inset-0 bg-linear-to-br from-blue-500/10 to-transparent" />
-                          <div className="text-5xl md:text-6xl font-black text-foreground z-10 tabular-nums">
-                            {questions[currentQuestionIndex]?.displayValue}
-                          </div>
-                        </motion.div>
-                      ) : (
-                        <div className="perspective-1000 py-8">
-                          <motion.div 
-                            animate={{ rotateY: [0, 360] }}
-                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            className="w-32 h-32 relative preserve-3d"
-                          >
-                            {/* Cube Sides */}
-                            {[
-                              "rotateY(0deg) translateZ(64px)",
-                              "rotateY(90deg) translateZ(64px)",
-                              "rotateY(180deg) translateZ(64px)",
-                              "rotateY(270deg) translateZ(64px)",
-                              "rotateX(90deg) translateZ(64px)",
-                              "rotateX(-90deg) translateZ(64px)"
-                            ].map((transform, i) => (
-                              <div 
-                                key={i}
-                                className="absolute inset-0 bg-purple-600/20 border-2 border-purple-500/50 flex items-center justify-center text-2xl font-black text-foreground shadow-inner backdrop-blur-sm"
-                                style={{ transform }}
-                              >
-                                {questions[currentQuestionIndex]?.displayValue}
-                              </div>
-                            ))}
-                          </motion.div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-7xl md:text-9xl font-black text-foreground tracking-tighter tabular-nums py-8">
-                      {questions[currentQuestionIndex]?.displayValue}
-                    </div>
-                  )}
+                  <div className="text-7xl md:text-9xl font-black text-foreground tracking-tighter tabular-nums">
+                    {questions[currentQuestionIndex]?.displayValue}
+                  </div>
                 </motion.div>
 
                 <form onSubmit={handleSubmit} className="w-full max-w-xs space-y-4">

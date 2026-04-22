@@ -165,7 +165,7 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
   }
 
   return (
-    <main className="min-h-screen p-6 md:p-8 relative overflow-hidden bg-background font-sans">
+    <main className="min-h-screen p-2 md:p-8 pt-24 md:pt-28 relative overflow-hidden bg-background font-sans">
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
 
@@ -185,7 +185,7 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
           {/* Left Column: Upload Center */}
           <div className="space-y-4">
-            <div className="glass p-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden h-full flex flex-col">
+            <div className="glass p-4 md:p-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden h-full flex flex-col">
               <div className="absolute top-0 right-0 w-48 h-48 -mr-16 -mt-16 bg-blue-500/10 rounded-full blur-3xl" />
               
               <div className="relative z-10 space-y-8 flex-1 flex flex-col">
@@ -234,7 +234,7 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
 
           {/* Right Column: Local Library slice */}
           <div className="space-y-4 flex flex-col">
-            <div className="glass p-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden flex-1 h-full min-h-[450px]">
+            <div className="glass p-4 md:p-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden flex-1 h-full min-h-[450px]">
               <div className="absolute bottom-0 left-0 w-48 h-48 -ml-16 -mb-16 bg-purple-500/10 rounded-full blur-3xl font-black" />
               
               <div className="relative z-10 space-y-8 flex flex-col h-full">
@@ -296,7 +296,7 @@ export default function AIDashboard({ user, initialPdfs, initialTests, localFile
           </div>
         </div>
         
-        <StudyPlan weaknesses={weaknesses} />
+        <StudyPlan user={user} weaknesses={weaknesses} />
       </div>
 
       {/* Immersive AI Progress Overlay */}

@@ -83,7 +83,7 @@ export default function MistakeVault() {
   }
 
   return (
-    <main className="min-h-screen p-4 md:p-12 lg:p-20 relative overflow-hidden bg-background font-sans">
+    <main className="min-h-screen p-2 md:p-12 lg:p-20 pt-24 md:pt-28 relative overflow-hidden bg-background font-sans">
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
 
@@ -137,7 +137,7 @@ export default function MistakeVault() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="glass p-8 rounded-4xl border border-white/10 hover:border-white/20 transition-all group relative overflow-hidden"
+                    className="glass p-5 md:p-8 rounded-4xl border border-white/10 hover:border-white/20 transition-all group relative overflow-hidden"
                   >
                     <div className="flex justify-between items-start gap-4 mb-6">
                        <div className="space-y-1">
@@ -173,7 +173,7 @@ export default function MistakeVault() {
 
           {/* Sidebar Stats */}
           <div className="space-y-6">
-             <div className="glass p-8 rounded-[2.5rem] border border-white/10 sticky top-12 space-y-8">
+             <div className="glass p-5 md:p-8 rounded-[2.5rem] border border-white/10 sticky top-12 space-y-8">
                 <div className="space-y-4">
                   <h3 className="text-xl font-black text-foreground flex items-center gap-2">
                     <Target className="w-5 h-5 text-blue-500" /> Improvement Hub

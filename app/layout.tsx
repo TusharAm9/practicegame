@@ -36,7 +36,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col antialiased" suppressHydrationWarning>
         <Navbar />
-        <div className="pt-24 flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col">
           {children}
         </div>
       </body>

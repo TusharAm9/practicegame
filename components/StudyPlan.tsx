@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   CheckCircle2, 
   Circle, 
@@ -12,11 +12,32 @@ import {
   Languages, 
   Flame,
   Zap,
-  Target
+  Target,
+  Plus,
+  Trash2,
+  Edit2,
+  Check,
+  X,
+  Loader2
 } from "lucide-react";
+import { 
+  getStudyTasks, 
+  createStudyTask, 
+  updateStudyTask, 
+  deleteStudyTask, 
+  initializeStudyTasks 
+} from "@/utils/supabase/study-plan";
 
 interface StudyPlanProps {
+  user: any;
   weaknesses: any;
+}
+
+interface Task {
+  id: string;
+  subject: string;
+  topic: string;
+  is_completed: boolean;
 }
 
 const HIGH_YIELD_TOPICS: Record<string, string[]> = {
@@ -26,13 +47,75 @@ const HIGH_YIELD_TOPICS: Record<string, string[]> = {
   Reasoning: ["Coding-Decoding", "Blood Relations", "Number Series", "Syllogism & Venn Diagrams"]
 };
 
-export default function StudyPlan({ weaknesses }: StudyPlanProps) {
-  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+export default function StudyPlan({ user, weaknesses }: StudyPlanProps) {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [isAddingTo, setIsAddingTo] = useState<string | null>(null);
+  const [newValue, setNewValue] = useState("");
 
-  const toggleTask = (taskId: string) => {
-    setCompletedTasks(prev => 
-      prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
-    );
+  const initializationStarted = React.useRef(false);
+
+  useEffect(() => {
+    if (user && !initializationStarted.current) {
+      initializationStarted.current = true;
+      loadTasks();
+    }
+  }, [user]);
+
+  const loadTasks = async () => {
+    setLoading(true);
+    try {
+      const data = await getStudyTasks(user.id);
+      if (data && data.length > 0) {
+        setTasks(data);
+      } else {
+        // Initialize with defaults if empty
+        const initialized = await initializeStudyTasks(user.id, HIGH_YIELD_TOPICS);
+        setTasks(initialized);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleTask = async (task: Task) => {
+    const updated = await updateStudyTask(task.id, { is_completed: !task.is_completed });
+    if (updated) {
+      setTasks(prev => prev.map(t => t.id === task.id ? updated : t));
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditValue(task.topic);
+  };
+
+  const saveEdit = async (taskId: string) => {
+    if (!editValue.trim()) return;
+    const updated = await updateStudyTask(taskId, { topic: editValue });
+    if (updated) {
+      setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
+      setEditingTaskId(null);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    const success = await deleteStudyTask(taskId);
+    if (success) {
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+    }
+  };
+
+  const handleAddTask = async (subject: string) => {
+    if (!newValue.trim()) return;
+    const added = await createStudyTask(user.id, subject, newValue);
+    if (added) {
+      setTasks(prev => [...prev, added]);
+      setNewValue("");
+      setIsAddingTo(null);
+    }
   };
 
   const getSubjectMetrics = (subject: string) => {
@@ -46,7 +129,6 @@ export default function StudyPlan({ weaknesses }: StudyPlanProps) {
 
     const avgAccuracy = subjectData.reduce((acc, curr) => acc + curr.accuracy, 0) / subjectData.length;
     
-    // AI Calculation for Recommended Hours
     let hours = 0;
     let priority = 'Medium';
     if (avgAccuracy < 50) {
@@ -70,6 +152,15 @@ export default function StudyPlan({ weaknesses }: StudyPlanProps) {
     { name: "Reasoning", icon: <Brain className="w-5 h-5" />, color: "purple" },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
+        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Syncing Study Plan...</p>
+      </div>
+    );
+  }
+
   return (
     <section className="mt-12 space-y-8">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -78,7 +169,7 @@ export default function StudyPlan({ weaknesses }: StudyPlanProps) {
             <Flame className="w-4 h-4 fill-current" /> AI Recommended Focus
           </div>
           <h2 className="text-3xl font-black text-foreground">Next 7 Days <span className="text-blue-500">Study Plan</span></h2>
-          <p className="text-slate-500 text-sm font-medium mt-1">Personalized todo list based on your recent performance metrics.</p>
+          <p className="text-slate-500 text-sm font-medium mt-1">Personalized todo list synced across your devices.</p>
         </div>
         
         <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
@@ -98,7 +189,7 @@ export default function StudyPlan({ weaknesses }: StudyPlanProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {subjects.map((subject, idx) => {
           const metrics = getSubjectMetrics(subject.name);
-          const topics = HIGH_YIELD_TOPICS[subject.name] || [];
+          const subjectTasks = tasks.filter(t => t.subject === subject.name);
 
           return (
             <motion.div 
@@ -142,34 +233,87 @@ export default function StudyPlan({ weaknesses }: StudyPlanProps) {
               {/* Todo List */}
               <div className="flex-1 p-6 pt-2 bg-white/2 border-t border-white/5">
                 <div className="space-y-4">
-                  {topics.map((topic) => {
-                    const taskId = `${subject.name}-${topic}`;
-                    const isCompleted = completedTasks.includes(taskId);
-                    
-                    return (
-                      <button 
-                        key={topic}
-                        onClick={() => toggleTask(taskId)}
-                        className="flex items-start gap-3 w-full text-left group/task"
-                      >
-                        <div className={`mt-0.5 rounded-full transition-colors ${
-                          isCompleted ? `text-${subject.color}-500` : "text-slate-600 group-hover/task:text-slate-400"
-                        }`}>
-                          {isCompleted ? <CheckCircle2 className="w-5 h-5 fill-current/10" /> : <Circle className="w-5 h-5" />}
+                  {subjectTasks.map((task) => (
+                    <div key={task.id} className="flex flex-col gap-2 group/task">
+                      {editingTaskId === task.id ? (
+                        <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl">
+                          <input 
+                            type="text" 
+                            value={editValue} 
+                            onChange={(e) => setEditValue(e.target.value)}
+                            className="bg-transparent border-none text-sm text-foreground focus:ring-0 w-full"
+                            autoFocus
+                            onKeyDown={(e) => e.key === 'Enter' && saveEdit(task.id)}
+                          />
+                          <button onClick={() => saveEdit(task.id)} className="text-emerald-500 hover:scale-110 transition-transform">
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setEditingTaskId(null)} className="text-rose-500 hover:scale-110 transition-transform">
+                            <X className="w-4 h-4" />
+                          </button>
                         </div>
-                        <div className="flex flex-col">
-                           <span className={`text-sm font-medium transition-all ${
-                             isCompleted ? "text-slate-500 line-through" : "text-slate-300"
-                           }`}>
-                             {topic}
-                           </span>
-                           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                             {isCompleted ? "Completed" : "Pending Study"}
-                           </span>
+                      ) : (
+                        <div className="flex items-start gap-3 w-full group/item">
+                          <button 
+                            onClick={() => toggleTask(task)}
+                            className={`mt-0.5 rounded-full transition-colors ${
+                              task.is_completed ? `text-${subject.color}-500` : "text-slate-600 hover:text-slate-400"
+                            }`}
+                          >
+                            {task.is_completed ? <CheckCircle2 className="w-5 h-5 fill-current/10" /> : <Circle className="w-5 h-5" />}
+                          </button>
+                          <div className="flex-1 flex flex-col">
+                             <span className={`text-sm font-medium transition-all ${
+                               task.is_completed ? "text-slate-500 line-through" : "text-slate-300"
+                             }`}>
+                               {task.topic}
+                             </span>
+                             <div className="flex items-center gap-2 mt-1">
+                               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                 {task.is_completed ? "Completed" : "Pending Study"}
+                               </span>
+                               <div className="flex items-center gap-2 ml-auto opacity-0 group-hover/item:opacity-100 transition-opacity">
+                                 <button onClick={() => handleEditTask(task)} className="text-slate-500 hover:text-blue-500 transition-colors">
+                                   <Edit2 className="w-3 h-3" />
+                                 </button>
+                                 <button onClick={() => handleDeleteTask(task.id)} className="text-slate-500 hover:text-rose-500 transition-colors">
+                                   <Trash2 className="w-3 h-3" />
+                                 </button>
+                               </div>
+                             </div>
+                          </div>
                         </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Add New Topic */}
+                  {isAddingTo === subject.name ? (
+                    <div className="flex items-center gap-2 bg-white/5 p-2 rounded-xl mt-4">
+                      <input 
+                        type="text" 
+                        value={newValue} 
+                        onChange={(e) => setNewValue(e.target.value)}
+                        placeholder="Study topic..."
+                        className="bg-transparent border-none text-sm text-foreground focus:ring-0 w-full"
+                        autoFocus
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddTask(subject.name)}
+                      />
+                      <button onClick={() => handleAddTask(subject.name)} className="text-blue-500 hover:scale-110 transition-transform">
+                        <Plus className="w-4 h-4" />
                       </button>
-                    );
-                  })}
+                      <button onClick={() => setIsAddingTo(null)} className="text-rose-500 hover:scale-110 transition-transform">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setIsAddingTo(subject.name)}
+                      className="flex items-center gap-2 w-full text-slate-500 hover:text-slate-300 text-xs font-bold uppercase tracking-widest p-2 rounded-xl border border-dashed border-white/5 hover:border-white/20 transition-all mt-4"
+                    >
+                      <Plus className="w-3 h-3" /> Add Topic
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -186,3 +330,4 @@ export default function StudyPlan({ weaknesses }: StudyPlanProps) {
     </section>
   );
 }
+

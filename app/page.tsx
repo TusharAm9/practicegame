@@ -54,7 +54,7 @@ export default function Home() {
   }, [supabase]);
 
   return (
-    <main className="min-h-screen p-6 md:p-8 relative overflow-hidden bg-background">
+    <main className="min-h-screen p-6 md:p-8 pt-24 md:pt-28 relative overflow-hidden bg-background">
       {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[-5%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-5%] w-[40%] h-[40%] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />

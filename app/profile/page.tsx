@@ -95,7 +95,7 @@ export default function ProfilePage() {
   });
 
   return (
-    <main className="min-h-screen p-4 md:p-12 lg:p-20 bg-background relative overflow-hidden font-sans">
+    <main className="min-h-screen p-2 md:p-12 lg:p-20 pt-24 md:pt-28 bg-background relative overflow-hidden font-sans">
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-purple-500/5 blur-[120px] rounded-full pointer-events-none" />
 
@@ -116,7 +116,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Left: User Overview */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-1 space-y-6">
-            <div className="glass p-8 rounded-[2.5rem] border border-white/10 text-center relative overflow-hidden">
+            <div className="glass p-5 md:p-8 rounded-[2.5rem] border border-white/10 text-center relative overflow-hidden">
                <div className="w-20 h-20 rounded-3xl bg-linear-to-tr from-blue-500 to-purple-500 mx-auto mb-6 flex items-center justify-center shadow-xl">
                  <span className="text-3xl font-black text-white">{fullName.charAt(0).toUpperCase()}</span>
                </div>
@@ -140,7 +140,7 @@ export default function ProfilePage() {
 
           {/* Right: History & Performance */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-3 space-y-8">
-            <div className="glass p-8 rounded-[2.5rem] border border-white/10">
+            <div className="glass p-4 md:p-8 rounded-[2.5rem] border border-white/10">
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-xl font-black text-foreground flex items-center gap-3">
                   <History className="w-6 h-6 text-blue-500" /> Recent Activity

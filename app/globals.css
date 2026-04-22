@@ -108,6 +108,10 @@ body.hide-navbar nav {
   display: none !important;
 }
 
+body.hide-navbar .pt-24 {
+  padding-top: 0 !important;
+}
+
 /* 3D Effects */
 .perspective-1000 {
   perspective: 1000px;
