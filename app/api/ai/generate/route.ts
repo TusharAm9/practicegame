@@ -2,7 +2,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { extractTextFromPDF, generateQuestionsFromText } from "@/utils/supabase/ai";
+import { extractTextFromPDF, generateQuestionsFromText } from "@/utils/supabase/ai_engine";
 
 export async function POST(req: Request) {
   try {
@@ -35,28 +35,38 @@ export async function POST(req: Request) {
     else if (lowerPath.includes("english")) subject = "English";
     else if (lowerPath.includes("gk") || lowerPath.includes("current affairs")) subject = "GK";
 
+    console.log(`AI: Detected subject "${subject}" from path "${filePath}"`);
     const questions = await generateQuestionsFromText(text, subject);
 
     // 4. Save to Database
+    console.log(`AI: Saving ${questions?.length || 0} questions to database...`);
     const { data: testData, error: insertError } = await supabase
       .from('ai_tests')
       .insert({
         user_id: user.id,
         pdf_id: pdfId,
         title: `Test from PDF: ${new Date().toLocaleDateString()}`,
-        subject: "General Awareness",
+        subject: subject, // Fixed: use detected subject instead of hardcoded
         questions: questions,
         difficulty: "standard"
       })
       .select()
       .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      console.error("AI: Database insert error:", insertError);
+      throw insertError;
+    }
 
+    console.log("AI: Successfully created test:", testData.id);
     return NextResponse.json({ success: true, test: testData });
 
   } catch (error: any) {
     console.error("AI Route Error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    // Ensure we ALWAYS return JSON
+    return NextResponse.json({ 
+      success: false,
+      error: error.message || "Internal Server Error" 
+    }, { status: 500 });
   }
 }

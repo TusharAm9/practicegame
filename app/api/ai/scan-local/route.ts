@@ -2,7 +2,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { extractTextFromPDF, generateQuestionsFromText } from "@/utils/supabase/ai";
+import { extractTextFromPDF, generateQuestionsFromText } from "@/utils/supabase/ai_engine";
 import fs from "fs";
 import path from "path";
 
@@ -65,31 +65,63 @@ export async function POST(req: Request) {
         
         Text to analyze: ${text.slice(0, 50000)}
     `;
+    console.log(`AI: Sending prompt to Gemini for local scan. Subject: ${subject}`);
     const result = await generateQuestionsFromText(text, prompt);
-    const testBatches = result.test_batches || [];
+    
+    // Handle both { test_batches: [...] } and direct array of questions
+    let testBatches = [];
+    if (result.test_batches && Array.isArray(result.test_batches)) {
+      testBatches = result.test_batches;
+    } else if (Array.isArray(result)) {
+      // If it returned a flat array, wrap it in a single batch
+      testBatches = [{
+        subject: subject,
+        title: "Mock Set",
+        questions: result
+      }];
+    } else if (result.questions && Array.isArray(result.questions)) {
+      // If it returned an object with questions but no batches
+      testBatches = [{
+        subject: result.subject || subject,
+        title: result.title || "Mock Set",
+        questions: result.questions
+      }];
+    }
+
+    console.log(`AI: Processing ${testBatches.length} test batches...`);
 
     // 5. Save all generated batches to Database
     const savedTests = [];
     for (const batch of testBatches) {
+      if (!batch.questions || !Array.isArray(batch.questions) || batch.questions.length === 0) continue;
+
       const { data: testData, error: insertError } = await supabase
         .from('ai_tests')
         .insert({
           user_id: user.id,
           title: `${batch.title}: ${fileName.replace('.pdf', '')}`,
-          subject: batch.subject,
+          subject: batch.subject || subject,
           questions: batch.questions,
           difficulty: "standard"
         })
         .select()
         .single();
       
-      if (!insertError) savedTests.push(testData);
+      if (!insertError) {
+        savedTests.push(testData);
+      } else {
+        console.error("AI: Error inserting test batch:", insertError);
+      }
     }
 
+    console.log(`AI: Successfully saved ${savedTests.length} tests.`);
     return NextResponse.json({ success: true, tests: savedTests });
 
   } catch (error: any) {
     console.error("Local Scan Route Error:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      error: error.message || "Internal Server Error" 
+    }, { status: 500 });
   }
 }
