@@ -119,30 +119,47 @@ export default function StudyPlan({ user, weaknesses }: StudyPlanProps) {
   };
 
   const getSubjectMetrics = (subject: string) => {
-    if (!weaknesses) return { accuracy: 0, hours: 10, priority: 'Medium' };
-    
-    const subjectData = Object.entries(weaknesses)
-      .filter(([key]) => key.toLowerCase().includes(subject.toLowerCase()))
-      .map(([_, val]: any) => val);
+    const subjectTasks = tasks.filter(t => t.subject === subject);
+    const totalTasks = subjectTasks.length;
+    const completedTasks = subjectTasks.filter(t => t.is_completed).length;
+    const completionRate = totalTasks > 0 ? completedTasks / totalTasks : 0;
 
-    if (subjectData.length === 0) return { accuracy: 0, hours: 12, priority: 'High' };
+    let baseAccuracy = 0;
+    let baseHours = 12;
+    let priority = 'High';
 
-    const avgAccuracy = subjectData.reduce((acc, curr) => acc + curr.accuracy, 0) / subjectData.length;
-    
-    let hours = 0;
-    let priority = 'Medium';
-    if (avgAccuracy < 50) {
-      hours = 18;
-      priority = 'Critical';
-    } else if (avgAccuracy < 75) {
-      hours = 10;
-      priority = 'High';
-    } else {
-      hours = 4;
-      priority = 'Revision';
+    if (weaknesses) {
+      const subjectData = Object.entries(weaknesses)
+        .filter(([key]) => key.toLowerCase().includes(subject.toLowerCase()))
+        .map(([_, val]: any) => val);
+
+      if (subjectData.length > 0) {
+        baseAccuracy = subjectData.reduce((acc, curr) => acc + curr.accuracy, 0) / subjectData.length;
+        
+        if (baseAccuracy < 50) {
+          baseHours = 18;
+          priority = 'Critical';
+        } else if (baseAccuracy < 75) {
+          baseHours = 10;
+          priority = 'High';
+        } else {
+          baseHours = 4;
+          priority = 'Revision';
+        }
+      } else {
+        // Default if no weakness data for this specific subject
+        baseHours = 12;
+        priority = 'High';
+      }
     }
 
-    return { accuracy: Math.round(avgAccuracy), hours, priority };
+    // Current Mastery is now based on topic completion
+    const mastery = Math.round(completionRate * 100);
+    
+    // Remaining hours decreases as topics are completed
+    const remainingHours = Math.max(0, Math.round(baseHours * (1 - completionRate)));
+
+    return { mastery, hours: remainingHours, priority, totalTasks, completedTasks };
   };
 
   const subjects = [
@@ -151,6 +168,8 @@ export default function StudyPlan({ user, weaknesses }: StudyPlanProps) {
     { name: "English", icon: <Languages className="w-5 h-5" />, color: "rose" },
     { name: "Reasoning", icon: <Brain className="w-5 h-5" />, color: "purple" },
   ];
+
+  const totalRemainingHours = subjects.reduce((acc, sub) => acc + getSubjectMetrics(sub.name).hours, 0);
 
   if (loading) {
     return (
@@ -174,8 +193,8 @@ export default function StudyPlan({ user, weaknesses }: StudyPlanProps) {
         
         <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl backdrop-blur-md">
            <div className="flex flex-col items-center border-r border-white/10 pr-4">
-              <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total Hrs</span>
-              <span className="text-xl font-black text-foreground">42h</span>
+              <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Remaining Hrs</span>
+              <span className="text-xl font-black text-foreground">{totalRemainingHours}h</span>
            </div>
            <div className="flex flex-col items-center pl-2">
               <span className="text-[10px] font-black uppercase text-blue-500 tracking-widest flex items-center gap-1">
@@ -219,14 +238,17 @@ export default function StudyPlan({ user, weaknesses }: StudyPlanProps) {
                 <h3 className="text-xl font-black text-foreground mb-1">{subject.name}</h3>
                 <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
                   <span>Current Mastery</span>
-                  <span className="text-foreground">{metrics.accuracy}%</span>
+                  <span className="text-foreground">{metrics.mastery}%</span>
                 </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-6">
+                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-2">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: `${metrics.accuracy}%` }}
+                    animate={{ width: `${metrics.mastery}%` }}
                     className={`h-full rounded-full bg-${subject.color}-500`}
                   />
+                </div>
+                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-4">
+                  {metrics.completedTasks} of {metrics.totalTasks} topics completed
                 </div>
               </div>
 
