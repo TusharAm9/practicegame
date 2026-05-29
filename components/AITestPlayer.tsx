@@ -123,7 +123,7 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
       });
 
       const score = results.filter(r => r.isCorrect).length;
-      await supabase.from('test_results').insert({
+      const { error: saveError } = await supabase.from('test_results').insert({
         user_id: user.id,
         subject: `AI: ${test.subject}`,
         mode: test.title,
@@ -132,6 +132,12 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
         time_taken: time,
         accuracy: Math.round((score / test.questions.length) * 100)
       });
+
+      if (saveError) {
+        console.error("AI: Failed to save results:", saveError);
+      } else {
+        console.log("AI: Results saved successfully!");
+      }
 
       const { updateGameStats } = await import("@/utils/supabase/queries");
       await updateGameStats(user.id, { score, total: test.questions.length });
@@ -233,14 +239,55 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
         {/* Left: Question Content (70%) */}
         <div className="flex-1 flex flex-col min-h-[85vh]">
           {/* Header */}
-          <div className="flex justify-between items-center mb-6 glass p-6 rounded-3xl border border-white/10">
+          <div className="flex justify-between items-center mb-6 glass p-3 md:px-6 md:py-3 rounded-2xl border border-white/10">
             <div className="flex items-center gap-3">
-               <Brain className="w-5 h-5 text-blue-500" />
-               <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">{test.subject} Vault</span>
+               <Brain className="w-4 h-4 text-blue-500" />
+               <span className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.1em]">{test.subject} Vault</span>
+            </div>
+
+            {/* Top Center Actions */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <button 
+                 onClick={() => handleJump(Math.max(0, currentIndex - 1))}
+                 disabled={currentIndex === 0}
+                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white disabled:opacity-20 transition-all text-[9px] font-normal uppercase tracking-wider"
+               >
+                 <ChevronLeft className="w-3 h-3" /> Previous
+              </button>
+
+              <button 
+                onClick={toggleMarkForReview}
+                className={`px-3 py-1.5 rounded-xl border font-normal uppercase tracking-wider text-[9px] transition-all flex items-center gap-1.5 ${
+                  markedForReview[currentIndex] 
+                    ? "bg-purple-500 border-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.3)]" 
+                    : "bg-white/5 border-white/10 text-slate-400 hover:text-purple-400"
+                }`}
+              >
+                <Flag className="w-3 h-3" /> Mark for Review
+              </button>
+
+              <button 
+                onClick={() => {
+                  const newSelections = [...userSelections];
+                  newSelections[currentIndex] = null;
+                  setUserSelections(newSelections);
+                }}
+                className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-slate-500 hover:text-rose-500 font-normal uppercase tracking-wider text-[9px] transition-all"
+              >
+                Clear Response
+              </button>
+
+              <button 
+                onClick={handleSaveAndNext}
+                disabled={currentIndex === test.questions.length - 1}
+                className="px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-normal uppercase tracking-wider text-[9px] transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] disabled:opacity-30 disabled:shadow-none"
+              >
+                Save & Next
+              </button>
             </div>
             
             <button onClick={onExit} className="text-slate-500 hover:text-rose-500 transition-colors">
-              <XCircle className="w-6 h-6" />
+              <XCircle className="w-5 h-5" />
             </button>
           </div>
 
@@ -296,49 +343,6 @@ export default function AITestPlayer({ test, onExit }: AITestPlayerProps) {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Bottom Actions */}
-            <div className="mt-12 flex flex-wrap gap-4 items-center justify-between border-t border-white/10 pt-8">
-               <div className="flex gap-4">
-                 <button 
-                   onClick={() => handleJump(Math.max(0, currentIndex - 1))}
-                   disabled={currentIndex === 0}
-                   className="p-4 rounded-2xl bg-white/5 border border-white/10 text-slate-400 hover:text-white disabled:opacity-30 transition-all"
-                 >
-                   <ChevronLeft className="w-6 h-6" />
-                 </button>
-                 <button 
-                  onClick={toggleMarkForReview}
-                  className={`px-6 py-4 rounded-2xl border font-black uppercase tracking-widest text-[10px] transition-all flex items-center gap-2 ${
-                    markedForReview[currentIndex] 
-                      ? "bg-purple-500 border-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]" 
-                      : "bg-white/5 border-white/10 text-slate-400 hover:text-purple-400"
-                  }`}
-                 >
-                   <Flag className="w-4 h-4" /> Mark for Review
-                 </button>
-               </div>
-
-               <div className="flex gap-4">
-                  <button 
-                    onClick={() => {
-                      const newSelections = [...userSelections];
-                      newSelections[currentIndex] = null;
-                      setUserSelections(newSelections);
-                    }}
-                    className="px-6 py-4 rounded-2xl bg-white/5 border border-white/10 text-slate-500 hover:text-rose-500 font-black uppercase tracking-widest text-[10px] transition-all"
-                  >
-                    Clear Response
-                  </button>
-                  <button 
-                    onClick={handleSaveAndNext}
-                    disabled={currentIndex === test.questions.length - 1}
-                    className="px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] disabled:opacity-30 disabled:shadow-none"
-                  >
-                    Save & Next
-                  </button>
-               </div>
             </div>
           </div>
         </div>

@@ -194,7 +194,7 @@ export default function MathPage() {
           const accuracy = Math.round((score / QUESTIONS_PER_SESSION) * 100);
 
           try {
-            await supabase.from('test_results').insert({
+            const { error: saveError } = await supabase.from('test_results').insert({
               user_id: user.id,
               subject: 'math',
               mode: mode,
@@ -204,11 +204,17 @@ export default function MathPage() {
               accuracy: accuracy
             });
 
+            if (saveError) {
+              console.error("Math: Failed to save results:", saveError);
+            } else {
+              console.log("Math: Results saved successfully!");
+            }
+
             // Update user profile activity/streak
             const { updateGameStats } = await import("@/utils/supabase/queries");
             await updateGameStats(user.id, { score, total: QUESTIONS_PER_SESSION });
           } catch (err) {
-            console.error("Failed to save results:", err);
+            console.error("Math: Exception saving results:", err);
           }
         }
       }
